@@ -35,7 +35,7 @@ npm run test:sites
 
 ## 本機永久存檔
 
-使用 `npm run dev -- --host 127.0.0.1 --port 4173`，開啟 `http://127.0.0.1:4173`。
+使用 `npm run dev -- --host 127.0.0.1 --port 4173`，開啟 `http://localhost:4173`。
 開發服務會將唱片、封面、音檔及 YouTube 曲目自動寫入 `.local-data/records/`，
 每張唱片一份 JSON（音檔內嵌）；畫面顯示「已存到本機」後即可安全刷新或關閉。
 重新啟動同一個專案，即使瀏覽器資料已清除或換了連接埠，仍會讀取這份收藏。
@@ -45,3 +45,5 @@ npm run test:sites
 單張唱片存檔上限為 256 MB（包含編碼後音檔）；超出或磁碟寫入失敗會顯示儲存失敗。
 本機 API 僅接受 localhost / 127.0.0.1 / ::1 的同來源請求。
 `npm run build` 的靜態網站與 `npm run preview` 仍使用瀏覽器 IndexedDB；磁碟存檔需使用上述開發服務。
+
+YouTube 播放請使用 `localhost` 入口。從 `127.0.0.1` 開啟時，程式會先搬入舊瀏覽器收藏，再自動導向 `localhost`，避免部分影片拒絕 IP 來源的嵌入播放。

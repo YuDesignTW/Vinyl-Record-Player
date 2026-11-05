@@ -7,7 +7,7 @@ import { TrackList } from './TrackList';
 import { createRecord, archiveSnapshot, moveTrack, recordSides } from './records';
 import { youtubeId } from './youtube';
 import { listRecords, saveRecord, deleteRecord } from './storage';
-import {localLibraryEnabled} from './localLibrary';
+import {localLibraryEnabled,canonicalLocalUrl} from './localLibrary';
 const tabs=['唱片庫','外觀','音樂','聆聽'];
 function IconButton({title,children,...props}){return <button className="icon-button" title={title} aria-label={title} {...props}>{children}</button>;}
 function Colors({value,onChange,colors}){return <div className="swatches">{colors.map(([color,name])=><button key={color} title={name} aria-label={name} aria-pressed={value===color} style={{background:color}} onClick={()=>onChange(color)}>{value===color&&<Check size={17} style={{color:color==='#171719'?'#fff':'#333'}}/>}</button>)}</div>;}
@@ -30,7 +30,7 @@ export function App(){
  function edit(fn){if(deleted.current.has(latest.current.id))return;const next=fn(latest.current);if(next===latest.current)return;latest.current=next;dirtyRef.current=true;setRecord(next);revision.current++;setDirty(true);setSaveError(false);}
  function releaseUrls(){urls.current.forEach(URL.revokeObjectURL);urls.current.clear();}
  function activate(next){intent.current=false;audio.current?.pause();releaseUrls();latest.current=next;dirtyRef.current=false;setRecord(next);setCurrentId(next.tracks[0]?.id||'');setSide(next.tracks[0]?.side||'A');setPlaying(false);setDirty(false);setSavedAt(next.updatedAt||null);revision.current++;setPendingDelete(null);setResetKey(k=>k+1);}
- useEffect(()=>{let active=true;listRecords().then(rows=>{if(!active)return;setLibrary(rows);if(rows.length)activate(rows[0]);else setCurrentId(record.tracks[0]?.id||'');}).catch(()=>setNotice('唱片庫暫時無法讀取，仍可編輯與播放；儲存時會再次嘗試。')).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
+ useEffect(()=>{let active=true;listRecords().then(rows=>{if(!active)return;const localUrl=localLibraryEnabled()&&canonicalLocalUrl(window.location.href);if(localUrl){window.location.replace(localUrl);return;}setLibrary(rows);if(rows.length)activate(rows[0]);else setCurrentId(record.tracks[0]?.id||'');}).catch(()=>setNotice('唱片庫暫時無法讀取，仍可編輯與播放；儲存時會再次嘗試。')).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
  useEffect(()=>()=>releaseUrls(),[]);
  useEffect(()=>{if(!dirty)return;const warn=e=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
  useEffect(()=>{if(intent.current&&current){if(current.youtubeId)setCollapsed(false);audio.current.play().catch(()=>{setPlaying(false);setNotice('無法播放此音檔，請選擇其他音檔。');});}},[currentId]);

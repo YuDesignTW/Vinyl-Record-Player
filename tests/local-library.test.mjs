@@ -77,3 +77,11 @@ test('local storage migrates old collections and never resurrects deleted record
   await assert.rejects(disk.listRecords,/offline/,'server failure must not silently become an empty library');
  }finally{globalThis.fetch=originalFetch;await rm(directory,{recursive:true,force:true});}
 });
+
+test('uses localhost for YouTube embeds while preserving the local page URL',async()=>{
+ const {canonicalLocalUrl}=await import('../src/localLibrary.js');
+ assert.equal(canonicalLocalUrl('http://127.0.0.1:4173/?view=music#record'),'http://localhost:4173/?view=music#record');
+ assert.equal(canonicalLocalUrl('http://[::1]:4173/'),'http://localhost:4173/');
+ assert.equal(canonicalLocalUrl('http://localhost:4173/'),null);
+ assert.equal(canonicalLocalUrl('https://example.com/'),null);
+});
