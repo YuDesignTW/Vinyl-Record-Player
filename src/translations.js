@@ -1,6 +1,6 @@
 // UI text only. Record names, track titles and artwork entered by users stay unchanged.
 export const messages = {
-'唱片庫':['Library','ライブラリ'],'外觀':['Appearance','デザイン'],'音樂':['Music','音楽'],'聆聽':['Listen','聴く'],
+'唱片庫':['Library','ライブラリ'],'外觀':['Appearance','デザイン'],'音樂':['Music','音楽'],'聆聽':['Player','聴く'],
 '標籤':['Label','ラベル'],'封套':['Sleeve','ジャケット'],'唱片':['Vinyl','レコード'],
 '回到唱片庫':['Back to library','ライブラリに戻る'],'播放器設定':['Player settings','プレーヤー設定'],
 '關閉影片背景':['Turn off video background','動画背景をオフ'],'影片背景':['Video background','動画背景'],
