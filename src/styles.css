@@ -280,10 +280,11 @@
 
 /* Compact brand and persistent language selector. */
 .v2 .topbar .brand{gap:3px;letter-spacing:-.8px;white-space:nowrap}
-.language-select{font:inherit;font-size:11px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:6px 8px;min-height:30px;max-width:100px;cursor:pointer;color-scheme:light}
-.dark .language-select{color-scheme:dark}
-.language-select:focus-visible{outline:2px solid #8b9c93;outline-offset:3px}
+.language-toggle{font:inherit;font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--ink);padding:4px;min-width:30px;height:30px;border-radius:50%;background:transparent}
+.language-toggle:hover{background:var(--soft)}
+.language-toggle:focus-visible{outline:2px solid #8b9c93;outline-offset:3px}
 .queue-heading-actions .icon-button{flex-shrink:0;width:26px;height:26px}
-.queue-heading-actions .icon-button[aria-pressed=true]{color:var(--ink);background:var(--soft)}
+.queue-heading-actions .video-background-toggle,.queue-heading-actions .video-background-toggle[aria-pressed=true]{color:var(--muted);background:transparent}
+.queue-heading-actions .queue-toggle svg,.queue-heading-actions .video-background-toggle svg{width:15px;height:15px;stroke-width:1.6}
 @media(min-width:701px) and (max-width:900px){.v2 .topbar nav{gap:2px}.v2 .topbar .nav-item{gap:2px}.v2 .topbar nav button{padding-inline:4px}.v2 .top-actions{gap:6px}}
-@media(max-width:700px){.v2 .topbar{display:flex;flex-wrap:wrap;height:88px;align-content:center;row-gap:7px;padding:10px 14px}.v2 .topbar .brand{font-size:20px}.v2 .topbar .top-actions{margin-left:auto;gap:7px}.v2 .topbar nav{position:static;transform:none;order:3;width:100%;justify-content:center;gap:3px}.v2 .topbar nav button{padding:3px 7px;font-size:11px}.v2 .topbar .language-select{font-size:10px;max-width:88px}.v2 .topbar .separator{font-size:9px}}
+@media(max-width:700px){.v2 .topbar{display:flex;flex-wrap:wrap;height:88px;align-content:center;row-gap:7px;padding:10px 14px}.v2 .topbar .brand{font-size:20px}.v2 .topbar .top-actions{margin-left:auto;gap:7px}.v2 .topbar nav{position:static;transform:none;order:3;width:100%;justify-content:center;gap:3px}.v2 .topbar nav button{padding:3px 7px;font-size:11px}.v2 .topbar .language-toggle{font-size:10px;min-width:28px}.v2 .topbar .separator{font-size:9px}}
