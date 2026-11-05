@@ -1,4 +1,4 @@
-# slowly. 黑膠播放器
+# hMusic 黑膠播放器
 
 React + Vite 前端，以 Vinylacy 配置器的 Color／封套頁面為視覺與動態參考。
 
@@ -47,3 +47,5 @@ npm run test:sites
 `npm run build` 的靜態網站與 `npm run preview` 仍使用瀏覽器 IndexedDB；磁碟存檔需使用上述開發服務。
 
 YouTube 播放請使用 `localhost` 入口。從 `127.0.0.1` 開啟時，程式會先搬入舊瀏覽器收藏，再自動導向 `localhost`，避免部分影片拒絕 IP 來源的嵌入播放。
+
+介面支援 English、日本語與繁體中文，預設英文；右上角可切換並記住此瀏覽器的選擇。影片背景按鈕位於「聆聽」曲目收合箭頭右側。

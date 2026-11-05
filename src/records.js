@@ -1,6 +1,6 @@
 export const SIDES = ['A', 'B', 'C', 'D'];
-export function createRecord(demo = false) {
-  const name = demo ? 'Slow Sunday' : '未命名唱片';
+export function createRecord(demo = false, untitled = 'Untitled record') {
+  const name = demo ? 'Slow Sunday' : untitled;
   return { id: crypto.randomUUID(), name, vinylColor: '#171719', vinylFinish:'opaque', vinylPattern:'solid', vinylAccent:'#f5e9d1', rpm: 33.33, sleeve: { type: 'single', color: '#e5e3df', front: '', back: '', insideLeft: '', insideRight: '' }, labels: Object.fromEntries(SIDES.map(side => [side, { title: name.toUpperCase(), color: '#e9e8e4', image: '' }])), tracks: demo ? [{ id: crypto.randomUUID(), title: 'Slow Sunday', detail: '原創合成音景 · 試聽', source: '/assets/slow-sunday.wav', side: 'A', duration: 24 }] : [] };
 }
 export const recordSides = record => record.sleeve.type === 'double' ? SIDES : SIDES.slice(0, 2);

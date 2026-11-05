@@ -17,6 +17,7 @@ URL.createObjectURL=()=>`blob:test-${Math.random()}`;URL.revokeObjectURL=()=>{};
 await build({entryPoints:['src/App.jsx'],bundle:true,platform:'node',format:'esm',jsx:'automatic',packages:'external',outfile:'node_modules/.cache/slowly-app-test.mjs'});
 const React=await import('react');const {render,screen,fireEvent,waitFor,cleanup}=await import('@testing-library/react');
 const {App}=await import('../node_modules/.cache/slowly-app-test.mjs');
+window.localStorage.setItem('hmusic-language','zh-TW');
 const {listRecords}=await import('../src/storage.js');
 
 test('import, independently label both faces, archive and remount, then switch records safely',async()=>{
@@ -130,6 +131,16 @@ test('YouTube shares transport and seeking, then releases the iframe when switch
   assert.ok(screen.getByRole('region',{name:'YouTube 播放器'}));
   assert.equal(document.querySelector('.youtube-player').classList.contains('panel-is-collapsed'),false);
   assert.ok(screen.getByLabelText('播放進度').closest('.listening-progress-host'));
+  const backdropButton=screen.getByRole('button',{name:'影片背景',exact:true});
+  assert.equal(backdropButton.previousElementSibling,screen.getByRole('button',{name:'收合曲目'}));
+  assert.equal(backdropButton.closest('.topbar'),null);
+  fireEvent.change(screen.getByRole('combobox',{name:'語言'}),{target:{value:'en'}});
+  assert.ok(screen.getByRole('button',{name:'Pause',exact:true}));
+  assert.equal(fake,originalPlayer,'changing language keeps the YouTube player');
+  fireEvent.change(screen.getByRole('combobox',{name:'Language'}),{target:{value:'ja'}});
+  assert.ok(screen.getByRole('button',{name:'一時停止',exact:true}));
+  assert.equal(fake,originalPlayer);
+  fireEvent.change(screen.getByRole('combobox',{name:'言語'}),{target:{value:'zh-TW'}});
   fireEvent.change(screen.getByLabelText('播放進度'),{target:{value:'40'}});assert.equal(fake.time,40);
   const originalIframe=fake.getIframe(),previousPauses=pauseCalls;
   fireEvent.click(screen.getByRole('button',{name:'影片背景',exact:true}));
@@ -140,6 +151,7 @@ test('YouTube shares transport and seeking, then releases the iframe when switch
   fireEvent.click(screen.getByRole('button',{name:'收合設定面板'}));
   assert.equal(pauseCalls,previousPauses,'the visible video keeps playing when its panel collapses');
   assert.ok(screen.getByRole('region',{name:'YouTube 播放器'}));
+  fireEvent.click(screen.getByRole('button',{name:'展開設定面板'}));
   fireEvent.click(screen.getByRole('button',{name:'關閉影片背景'}));
   assert.equal(document.querySelector('.youtube-surface iframe'),originalIframe);
   assert.equal(fake.time,40);assert.equal(pauseCalls,previousPauses);
@@ -169,4 +181,35 @@ test('deleting the active last record cancels pending autosave and stops playbac
   await new Promise(resolve=>setTimeout(resolve,550));
   assert.equal((await listRecords()).length,0);
  }finally{cleanup();console.error=originalError;}
+});
+
+test('language defaults to English, updates all controls without losing edits, and survives remount',async()=>{
+ const originalError=console.error;console.error=(...args)=>{if(!String(args[0]).includes('THREE.WebGLRenderer'))originalError(...args);};
+ window.localStorage.removeItem('hmusic-language');
+ try{
+  render(React.createElement(App));
+  assert.ok(screen.getByText('Loading your library…'));
+  await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
+  assert.equal(document.documentElement.lang,'en');
+  assert.equal(screen.getByRole('combobox',{name:'Language'}).value,'en');
+  assert.equal(screen.getByRole('button',{name:'Back to library'}).textContent,'hMusic');
+  fireEvent.click(screen.getByRole('button',{name:'Expand panel'}));
+  fireEvent.change(screen.getByLabelText('Current record'),{target:{value:'我的專輯 / My album'}});
+  fireEvent.change(screen.getByRole('combobox',{name:'Language'}),{target:{value:'ja'}});
+  assert.ok(screen.getByRole('button',{name:'ライブラリ',exact:true}));
+  assert.equal(screen.getByLabelText('現在のレコード').value,'我的專輯 / My album');
+  fireEvent.click(screen.getByRole('button',{name:'デザイン',exact:true}));
+  assert.ok(screen.getByRole('button',{name:'ラベル',exact:true}));
+  fireEvent.click(screen.getByRole('button',{name:'レコード',exact:true}));
+  assert.ok(screen.getByRole('button',{name:'クリアレコード'}));
+  assert.ok(screen.getByRole('button',{name:'マーブル'}));
+  fireEvent.change(screen.getByRole('combobox',{name:'言語'}),{target:{value:'zh-TW'}});
+  assert.ok(screen.getByRole('button',{name:'透明水晶唱片'}));
+  await waitFor(async()=>assert.ok((await listRecords()).some(r=>r.name==='我的專輯 / My album')));
+  fireEvent.change(screen.getByRole('combobox',{name:'語言'}),{target:{value:'ja'}});
+  cleanup();render(React.createElement(App));
+  await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
+  assert.equal(screen.getByRole('combobox',{name:'言語'}).value,'ja');
+  assert.equal(document.documentElement.lang,'ja');
+ }finally{cleanup();window.localStorage.setItem('hmusic-language','zh-TW');console.error=originalError;}
 });

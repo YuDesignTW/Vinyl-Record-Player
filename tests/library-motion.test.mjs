@@ -39,15 +39,15 @@ test('rapid selections cancel old transitions and retain the latest record', asy
   }
   try {
     render(React.createElement(Library));
-    const first = screen.getByRole('button', { name: '展示唱片 First' });
+    const first = screen.getByRole('button', { name: 'Show record First' });
     assert.equal(first.getAttribute('aria-pressed'), 'true');
-    fireEvent.click(screen.getByRole('button', { name: '展示唱片 Second' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show record Second' }));
     assert.equal(first.getAttribute('aria-pressed'), 'false');
     const interrupted = calls.filter(a => a.state === 'running');
-    fireEvent.click(screen.getByRole('button', { name: '展示唱片 Third' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show record Third' }));
     assert.ok(interrupted.every(a => a.state === 'cancelled'));
-    assert.equal(screen.getByRole('button', { name: '展示唱片 Second' }).getAttribute('aria-pressed'), 'false');
-    assert.equal(screen.getByRole('button', { name: '展示唱片 Third' }).getAttribute('aria-pressed'), 'true');
+    assert.equal(screen.getByRole('button', { name: 'Show record Second' }).getAttribute('aria-pressed'), 'false');
+    assert.equal(screen.getByRole('button', { name: 'Show record Third' }).getAttribute('aria-pressed'), 'true');
     await finish();
     assert.equal(document.querySelector('.library-presentation').dataset.motion, 'idle');
     assert.equal(document.querySelector('.library-caption h1').textContent, 'Third');
@@ -62,7 +62,7 @@ test('resize and navigation settle transitions, and reselecting the current reco
     fireEvent(window, new Event('resize'));
     assert.ok(calls.every(a => a.state === 'cancelled'));
     const count = calls.length;
-    fireEvent.click(screen.getByRole('button', { name: '展示唱片 First' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show record First' }));
     assert.equal(calls.length, count);
     ui.rerender(React.createElement(LibraryStage, { ...props, record: records[1] }));
     assert.ok(calls.some(a => a.state === 'running'));
@@ -78,11 +78,11 @@ test('reduced motion uses the final pose and still allows sleeve flipping', () =
   try {
     const ui = render(React.createElement(LibraryStage, props));
     assert.equal(calls.length, 0);
-    fireEvent.click(screen.getByRole('button', { name: '翻到背面，現在為 A 面' }));
-    assert.ok(screen.getByRole('button', { name: '翻到正面，現在為 B 面' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Flip to back, currently side A' }));
+    assert.ok(screen.getByRole('button', { name: 'Flip to front, currently side B' }));
     ui.rerender(React.createElement(LibraryStage, { ...props, active: false }));
     ui.rerender(React.createElement(LibraryStage, props));
-    assert.ok(screen.getByRole('button', { name: '翻到正面，現在為 B 面' }));
+    assert.ok(screen.getByRole('button', { name: 'Flip to front, currently side B' }));
     assert.equal(document.querySelector('.library-disc-spin').style.animationPlayState, 'running');
   } finally { cleanup(); reduced = false; }
 });
