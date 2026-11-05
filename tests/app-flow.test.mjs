@@ -104,12 +104,13 @@ test('import, independently label both faces, archive and remount, then switch r
 
 test('YouTube shares transport and seeking, then releases the iframe when switching to local audio',async()=>{
  const originalError=console.error;console.error=(...args)=>{if(!String(args[0]).includes('THREE.WebGLRenderer'))originalError(...args);};
- let fake,destroyed=false;
+ let fake,destroyed=false,pauseCalls=0;
  window.YT={Player:class {
-  constructor(node,options){fake=this;this.events=options.events;this.time=0;queueMicrotask(()=>this.events.onReady());}
+  constructor(node,options){fake=this;this.events=options.events;this.time=0;this.iframe=document.createElement('iframe');node.replaceWith(this.iframe);queueMicrotask(()=>this.events.onReady());}
+  getIframe(){return this.iframe;}
   setVolume(v){this.volume=v;} getDuration(){return 120;} getCurrentTime(){return this.time;}
-  playVideo(){this.events.onStateChange({data:1});} pauseVideo(){this.events.onStateChange({data:2});}
-  seekTo(v){this.time=v;} destroy(){destroyed=true;}
+  playVideo(){this.events.onStateChange({data:1});} pauseVideo(){pauseCalls++;this.events.onStateChange({data:2});}
+  seekTo(v){this.time=v;} destroy(){destroyed=true;this.iframe.remove();}
  }};
  try{
   render(React.createElement(App));
@@ -130,9 +131,24 @@ test('YouTube shares transport and seeking, then releases the iframe when switch
   assert.equal(document.querySelector('.youtube-player').classList.contains('panel-is-collapsed'),false);
   assert.ok(screen.getByLabelText('播放進度').closest('.listening-progress-host'));
   fireEvent.change(screen.getByLabelText('播放進度'),{target:{value:'40'}});assert.equal(fake.time,40);
+  const originalIframe=fake.getIframe(),previousPauses=pauseCalls;
+  fireEvent.click(screen.getByRole('button',{name:'影片背景',exact:true}));
+  assert.equal(screen.getByRole('button',{name:'關閉影片背景'}).getAttribute('aria-pressed'),'true');
+  assert.ok(document.querySelector('main').classList.contains('video-background'));
+  assert.equal(document.querySelector('.youtube-surface iframe'),originalIframe);
+  assert.equal(fake,originalPlayer);assert.equal(fake.time,40);assert.equal(pauseCalls,previousPauses);
+  fireEvent.click(screen.getByRole('button',{name:'收合設定面板'}));
+  assert.equal(pauseCalls,previousPauses,'the visible video keeps playing when its panel collapses');
+  assert.ok(screen.getByRole('region',{name:'YouTube 播放器'}));
+  fireEvent.click(screen.getByRole('button',{name:'關閉影片背景'}));
+  assert.equal(document.querySelector('.youtube-surface iframe'),originalIframe);
+  assert.equal(fake.time,40);assert.equal(pauseCalls,previousPauses);
+  assert.equal(document.querySelector('main').classList.contains('video-background'),false);
+  fireEvent.click(screen.getByRole('button',{name:'影片背景',exact:true}));
+
   fireEvent.click(screen.getByRole('button',{name:'暫停',exact:true}));assert.ok(screen.getByRole('button',{name:'播放',exact:true}));
   fireEvent.click(screen.getByRole('button',{name:'播放 Evening'}));
-  await waitFor(()=>assert.equal(destroyed,true));assert.ok(document.querySelector('audio'));assert.equal(screen.queryByRole('region',{name:'YouTube 播放器'}),null);
+  await waitFor(()=>assert.equal(destroyed,true));assert.equal(document.querySelector('main').classList.contains('video-background'),false);assert.equal(screen.queryByRole('button',{name:'關閉影片背景'}),null);assert.ok(document.querySelector('audio'));assert.equal(screen.queryByRole('region',{name:'YouTube 播放器'}),null);
  }finally{cleanup();delete window.YT;console.error=originalError;}
 });
 
