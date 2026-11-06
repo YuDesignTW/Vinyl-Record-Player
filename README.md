@@ -4,9 +4,13 @@ React + Vite 前端，以 Vinylacy 配置器的 Color／封套頁面為視覺與
 
 ## 開發
 
+Mac 可直接雙擊 `啟動 hMusic.command`（首次會安裝依賴），再開啟 http://localhost:4173。保留終端機視窗，按 Control+C 停止。啟動檔不會自動操作瀏覽器。
+
+也可以在本目錄執行 `npm start`；外層 LP 目錄另有相同的啟動捷徑。固定使用 4173，避免瀏覽器儲存因連接埠變更而分散。
+
 ```sh
 npm install
-npm run dev -- --host 127.0.0.1 --port 4173
+npm start
 npm test
 npm run build
 npm run test:sites
@@ -27,7 +31,7 @@ npm run test:sites
 
 ## 資料與素材
 
-- 資料僅存於目前瀏覽器及網站來源；清除網站資料會移除收藏，無帳號或跨裝置同步。
+- 本機開發保存到 `.local-data/records/`；正式部署保存到目前瀏覽器的 IndexedDB。正式站清除網站資料會移除收藏，無帳號或跨裝置同步。
 - 音檔、圖片不會上傳。瀏覽器容量不足會顯示儲存失敗。
 - 唱片表面使用本次 ImageGen 素材，反光烘焙於紋理，非物理材質即時反射。
 - slow-sunday.wav 為 24 秒原創合成試聽音景；圖示使用 lucide-react。
@@ -35,7 +39,7 @@ npm run test:sites
 
 ## 本機永久存檔
 
-使用 `npm run dev -- --host 127.0.0.1 --port 4173`，開啟 `http://localhost:4173`。
+使用 `npm start`，開啟 `http://localhost:4173`。
 開發服務會將唱片、封面、音檔及 YouTube 曲目自動寫入 `.local-data/records/`，
 每張唱片一份 JSON（音檔內嵌）；畫面顯示「已存到本機」後即可安全刷新或關閉。
 重新啟動同一個專案，即使瀏覽器資料已清除或換了連接埠，仍會讀取這份收藏。
@@ -49,3 +53,11 @@ npm run test:sites
 YouTube 播放請使用 `localhost` 入口。從 `127.0.0.1` 開啟時，程式會先搬入舊瀏覽器收藏，再自動導向 `localhost`，避免部分影片拒絕 IP 來源的嵌入播放。
 
 介面支援 English、日本語與繁體中文，預設英文；右上角可切換並記住此瀏覽器的選擇。影片背景按鈕位於「聆聽」曲目收合箭頭右側。
+
+## Vercel 部署與儲存限制
+
+若 Git repository 根目錄就是本目錄，Root Directory 留預設；若 repository 包含外層 LP，Root Directory 設為 `player`。`vercel.json` 已指定 Vite、`npm run build` 和 `dist/client`。
+
+正式建置使用 IndexedDB，不會呼叫本機檔案 API。收藏僅在同一瀏覽器、設定檔及網站來源內保留；localhost、預覽網址與正式網域各自獨立。訪客模式結束、清除網站資料或瀏覽器回收儲存空間可能移除收藏。現有 `.local-data` 不會上傳，也沒有本機到正式站的匯入流程。
+
+若需要換裝置仍保留收藏，需要另建帳號驗證、每位使用者的資料庫紀錄，以及音檔／封面的物件儲存。不可直接把本機寫入 JSON 的方式搬到 Vercel Functions 作為永久儲存。音檔應獨立上傳，不再跟每次唱片編輯一起以 Base64 重寫。
