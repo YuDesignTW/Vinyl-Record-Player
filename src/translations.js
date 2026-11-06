@@ -1,5 +1,12 @@
 // UI text only. Record names, track titles and artwork entered by users stay unchanged.
 export const messages = {
+'正在載入':['Loading','読み込み中'],
+'OhMusic 入口':['OhMusic entrance','OhMusic エントランス'],
+'進入唱片庫':['Enter library','ライブラリへ'],
+'繼續動畫':['Resume animation','アニメーションを再開'],
+'暫停動畫':['Pause animation','アニメーションを一時停止'],
+'使用與免責聲明':['Terms & disclaimer','利用上の注意・免責事項'],
+'YOUR OWN LITTLE RECORD STORE':['YOUR OWN LITTLE RECORD STORE','あなただけの小さなレコード店'],
 '唱片庫':['Library','ライブラリ'],'外觀':['Appearance','デザイン'],'音樂':['Music','音楽'],'聆聽':['Player','聴く'],
 '標籤':['Label','ラベル'],'封套':['Sleeve','ジャケット'],'唱片':['Vinyl','レコード'],
 '回到唱片庫':['Back to library','ライブラリに戻る'],'播放器設定':['Player settings','プレーヤー設定'],

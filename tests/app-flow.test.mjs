@@ -9,6 +9,7 @@ Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configu
 globalThis.requestAnimationFrame=fn=>setTimeout(()=>fn(performance.now()),16);globalThis.cancelAnimationFrame=clearTimeout;
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 window.HTMLCanvasElement.prototype.getContext=()=>null;
+window.matchMedia=()=>({matches:true,addEventListener(){},removeEventListener(){}});
 let playing=false;
 Object.defineProperty(HTMLMediaElement.prototype,'paused',{get(){return !playing;}});
 HTMLMediaElement.prototype.play=function(){playing=true;this.dispatchEvent(new Event('play'));return Promise.resolve();};
@@ -19,12 +20,13 @@ const React=await import('react');const {render,screen,fireEvent,waitFor,cleanup
 const {App}=await import('../node_modules/.cache/slowly-app-test.mjs');
 window.localStorage.setItem('hmusic-language','zh-TW');
 const {listRecords}=await import('../src/storage.js');
+async function enterStudio(){await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));fireEvent.click(screen.getAllByRole('button',{name:/進入唱片庫/})[0]);await waitFor(()=>assert.equal(document.querySelector('.record-entrance'),null));}
 function selectLanguage(language){const label={en:'EN',ja:'JP','zh-TW':'CN'}[language];for(let i=0;i<3;i++){const button=screen.getByTitle('English → 日本語 → 中文');if(button.textContent===label)return;fireEvent.click(button);}assert.fail('Language cycle did not reach '+language);}
 
 
 test('import, independently label both faces, archive and remount, then switch records safely',async()=>{
  const originalError=console.error;console.error=(...args)=>{if(String(args[0]).includes('THREE.WebGLRenderer'))return;originalError(...args);};
- const ui=render(React.createElement(App));
+ const ui=render(React.createElement(App));await enterStudio();
  fireEvent.click(screen.getByRole('button',{name:'翻到背面，現在為 A 面'}));
  assert.ok(screen.getByRole('button',{name:'翻到正面，現在為 B 面'}));
  fireEvent.click(screen.getByRole('button',{name:'翻到正面，現在為 B 面'}));
@@ -62,7 +64,7 @@ test('import, independently label both faces, archive and remount, then switch r
  fireEvent.click(screen.getByRole('button',{name:'唱片庫',exact:true}));fireEvent.change(screen.getByLabelText('目前唱片'),{target:{value:'Collection One'}});
  await waitFor(async()=>assert.ok((await listRecords()).some(r=>r.name==='Collection One')));
  const saved=(await listRecords()).find(r=>r.name==='Collection One');assert.equal(saved.tracks.length,3);assert.equal(saved.labels.B.title,'BACK');assert.ok(saved.tracks[1].blob);
- cleanup();render(React.createElement(App));fireEvent.click(screen.getByRole('button',{name:'展開設定面板'}));fireEvent.click(screen.getByRole('button',{name:'音樂',exact:true}));await waitFor(()=>assert.ok(screen.getByRole('button',{name:'播放 Evening'})));
+ cleanup();render(React.createElement(App));await enterStudio();fireEvent.click(screen.getByRole('button',{name:'展開設定面板'}));fireEvent.click(screen.getByRole('button',{name:'音樂',exact:true}));await waitFor(()=>assert.ok(screen.getByRole('button',{name:'播放 Evening'})));
  fireEvent.click(screen.getByRole('button',{name:'播放 Evening'}));await waitFor(()=>assert.ok(screen.getByRole('button',{name:'暫停',exact:true})));
  const liveAudio=document.querySelector('audio');
  fireEvent.keyDown(document.body,{key:' ',code:'Space'});
@@ -116,7 +118,7 @@ test('YouTube shares transport and seeking, then releases the iframe when switch
   seekTo(v){this.time=v;} destroy(){destroyed=true;this.iframe.remove();}
  }};
  try{
-  render(React.createElement(App));
+  render(React.createElement(App));await enterStudio();
   fireEvent.click(screen.getByRole('button',{name:'展開設定面板'}));
   fireEvent.click(screen.getByRole('button',{name:'音樂',exact:true}));
   await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
@@ -171,7 +173,7 @@ test('YouTube shares transport and seeking, then releases the iframe when switch
 test('deleting the active last record cancels pending autosave and stops playback',async()=>{
  const originalError=console.error;console.error=(...args)=>{if(!String(args[0]).includes('THREE.WebGLRenderer'))originalError(...args);};
  try{
-  render(React.createElement(App));fireEvent.click(screen.getByRole('button',{name:'展開設定面板'}));
+  render(React.createElement(App));await enterStudio();fireEvent.click(screen.getByRole('button',{name:'展開設定面板'}));
   await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
   const saved=await listRecords();assert.equal(saved.length,1);
   fireEvent.click(screen.getByRole('button',{name:'播放',exact:true}));
@@ -191,7 +193,7 @@ test('language defaults to English, updates all controls without losing edits, a
  const originalError=console.error;console.error=(...args)=>{if(!String(args[0]).includes('THREE.WebGLRenderer'))originalError(...args);};
  window.localStorage.removeItem('hmusic-language');
  try{
-  render(React.createElement(App));
+  render(React.createElement(App));await enterStudio();
   assert.ok(screen.getByText('Loading your library…'));
   await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
   assert.equal(document.documentElement.lang,'en');
@@ -211,7 +213,7 @@ test('language defaults to English, updates all controls without losing edits, a
   assert.ok(screen.getByRole('button',{name:'透明水晶唱片'}));
   await waitFor(async()=>assert.ok((await listRecords()).some(r=>r.name==='我的專輯 / My album')));
   selectLanguage('ja');
-  cleanup();render(React.createElement(App));
+  cleanup();render(React.createElement(App));await enterStudio();
   await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
   assert.equal(screen.getByRole('button',{name:'言語',exact:true}).textContent,'JP');
   assert.equal(document.documentElement.lang,'ja');
