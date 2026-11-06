@@ -102,3 +102,5 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Entrance auto-entry: status copy is only 「正在載入」 with equalizer. When actual loading completes, automatically select the visible sleeve nearest viewport center and run existing choreography, without an artificial wait or user click. Keep activation guard to prevent duplicates.
 - Loading status is unboxed: no background, border, shadow or backdrop blur around the label/equalizer; retain entrance background and animated bars.
 - Entrance text and accessible labels follow existing EN/JA/zh-TW preference through useTranslation. Disclaimer link passes language explicitly; standalone disclaimer localizes all content/title/document language using query preference, then saved preference, then English. Fictional album titles remain unchanged.
+
+- Entrance update (2026-11-06): supersedes auto-entry. Wait for both library data and entrance cover/vinyl image loading and decoding, then fade in the wall. Enter the studio only on explicit sleeve activation. Failed artwork uses a neutral fallback, with a bounded loading timeout; respect reduced motion.

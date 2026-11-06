@@ -11,3 +11,12 @@
 .entrance-loading{position:absolute;z-index:20;left:50%;top:50%;display:flex;align-items:center;gap:22px;min-width:290px;padding:25px 30px;border:1px solid #ffffffb3;border-radius:22px;background:#f1f1f3ed;box-shadow:0 12px 48px #0002;backdrop-filter:blur(24px);transform:translate(-50%,-45%);opacity:0;visibility:hidden;pointer-events:none;transition:opacity 300ms ease,transform 300ms ease,visibility 0s 300ms}.entrance-loading.is-active{opacity:1;visibility:visible;transform:translate(-50%,-50%);transition-delay:0s}.entrance-loading strong{display:block;font-size:17px;font-weight:600;letter-spacing:.5px}.entrance-loading span{display:block;font-size:12px;color:#737376;margin-top:6px}.entrance-equalizer{height:38px;display:flex;align-items:center;gap:4px;flex-shrink:0}.entrance-equalizer i{display:block;width:4px;height:34px;background:#292929;border-radius:3px;transform:scaleY(.25);animation:entrance-level 950ms ease-in-out infinite alternate;animation-delay:calc(var(--bar) * -170ms)}.entrance-loading:not(.is-active) .entrance-equalizer i{animation-play-state:paused}@keyframes entrance-level{0%{transform:scaleY(.2)}35%{transform:scaleY(.65)}65%{transform:scaleY(.35)}100%{transform:scaleY(1)}}@media(prefers-reduced-motion:reduce){.entrance-loading{transition:none}.entrance-equalizer i{animation:none;transform:scaleY(.6)}.entrance-equalizer i:nth-child(even){transform:scaleY(1)}}
 /* Loading label stays unboxed over the entrance. */
 .entrance-loading{background:transparent;border:0;box-shadow:none;backdrop-filter:none;border-radius:0}
+
+/* Reveal the wall only after its shared artwork has loaded and decoded. */
+.entrance-wall{opacity:0;visibility:hidden;transition:opacity 650ms ease,visibility 0s 650ms}
+.is-ready .entrance-wall{opacity:1;visibility:visible;transition-delay:0s}
+.is-loading .entrance-track{animation-play-state:paused}
+.entrance-cover{background-color:#c7c5c1}
+.missing-covers .cover-0,.missing-covers .cover-1,.missing-covers .cover-2,.missing-covers .cover-3,.missing-extra .cover-4,.missing-extra .cover-5,.missing-extra .cover-6{background-image:none}
+.entrance-disc{border-radius:50%;background:repeating-radial-gradient(circle,#222 0 2px,#303030 3px 4px)}
+@media(prefers-reduced-motion:reduce){.entrance-wall{transition:none}}

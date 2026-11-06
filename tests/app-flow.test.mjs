@@ -9,6 +9,7 @@ Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configu
 globalThis.requestAnimationFrame=fn=>setTimeout(()=>fn(performance.now()),16);globalThis.cancelAnimationFrame=clearTimeout;
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 window.HTMLCanvasElement.prototype.getContext=()=>null;
+window.Image=class {set src(value){queueMicrotask(()=>this.onload?.());} decode(){return Promise.resolve();}};
 window.matchMedia=()=>({matches:true,addEventListener(){},removeEventListener(){}});
 let playing=false;
 Object.defineProperty(HTMLMediaElement.prototype,'paused',{get(){return !playing;}});
@@ -20,9 +21,37 @@ const React=await import('react');const {render,screen,fireEvent,waitFor,cleanup
 const {App}=await import('../node_modules/.cache/slowly-app-test.mjs');
 window.localStorage.setItem('hmusic-language','zh-TW');
 const {listRecords}=await import('../src/storage.js');
-async function enterStudio(){await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));fireEvent.click(screen.getAllByRole('button',{name:/進入唱片庫/})[0]);await waitFor(()=>assert.equal(document.querySelector('.record-entrance'),null));}
+async function enterStudio(){await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));await waitFor(()=>assert.equal(document.querySelector('.entrance-record').disabled,false));fireEvent.click(document.querySelector('.entrance-record'));await waitFor(()=>assert.equal(document.querySelector('.record-entrance'),null));}
 function selectLanguage(language){const label={en:'EN',ja:'JP','zh-TW':'CN'}[language];for(let i=0;i<3;i++){const button=screen.getByTitle('English → 日本語 → 中文');if(button.textContent===label)return;fireEvent.click(button);}assert.fail('Language cycle did not reach '+language);}
 
+
+test('entrance waits for artwork decoding and requires an explicit click',async()=>{
+ const OriginalImage=window.Image;
+ const pending=[];
+ window.Image=class {
+  set src(value){this.url=value;pending.push(this);}
+  decode(){return new Promise(resolve=>{this.finishDecode=resolve;});}
+ };
+ try {
+  render(React.createElement(App));
+  await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
+  const entrance=()=>document.querySelector('.record-entrance');
+  assert.ok(entrance().classList.contains('is-loading'));
+  const button=document.querySelector('.entrance-record');
+  assert.equal(button.disabled,true);
+  fireEvent.click(button);
+  assert.ok(entrance());
+  for(const img of pending) img.onload();
+  assert.ok(entrance().classList.contains('is-loading'));
+  for(const img of pending) img.finishDecode();
+  await waitFor(()=>assert.ok(entrance().classList.contains('is-ready')));
+  await new Promise(resolve=>setTimeout(resolve,80));
+  assert.ok(entrance(),'loading completion must not automatically enter');
+  assert.equal(button.disabled,false);
+  fireEvent.click(button);
+  await waitFor(()=>assert.equal(entrance(),null));
+ } finally {cleanup();window.Image=OriginalImage;}
+});
 
 test('import, independently label both faces, archive and remount, then switch records safely',async()=>{
  const originalError=console.error;console.error=(...args)=>{if(String(args[0]).includes('THREE.WebGLRenderer'))return;originalError(...args);};
@@ -194,7 +223,7 @@ test('language defaults to English, updates all controls without losing edits, a
  window.localStorage.removeItem('hmusic-language');
  try{
   render(React.createElement(App));await enterStudio();
-  assert.ok(screen.getByText('Loading your library…'));
+  assert.equal(document.querySelector('.record-entrance'),null);
   await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
   assert.equal(document.documentElement.lang,'en');
   assert.equal(screen.getByRole('button',{name:'Language',exact:true}).textContent,'EN');
