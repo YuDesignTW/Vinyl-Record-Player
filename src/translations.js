@@ -1,5 +1,7 @@
 // UI text only. Record names, track titles and artwork entered by users stay unchanged.
 export const messages = {
+'YouTube 回覆：{0}':['YouTube response: {0}','YouTube からの応答：{0}'],
+'YouTube 未回傳可辨識的清單內容，請稍後重試。':['YouTube returned an unrecognized playlist response. Please try again later.','YouTube の再生リストの応答を認識できません。後でもう一度お試しください。'],
 '此網站尚未提供 YouTube 匯入服務，請更新部署後重試。':['YouTube import is not available on this site. Update the deployment and try again.','このサイトでは YouTube インポートが利用できません。デプロイを更新してください。'],
 'YouTube 讀取逾時，請稍後重試。':['YouTube timed out. Please try again later.','YouTube の読み込みがタイムアウトしました。後でもう一度お試しください。'],
 '播放清單沒有可讀取的影片，請確認公開狀態。':['No readable videos in this playlist. Check its visibility.','読み込める動画がありません。公開設定を確認してください。'],

@@ -63,3 +63,23 @@ test('playlist import follows continuation pages and preserves order without dup
  assert.equal(response.status,200);assert.equal(calls,2);
  assert.deepEqual((await response.json()).videos.map(v=>v.youtubeId),['iRb67zfMF7M','nvJoqGZOPcQ']);
 });
+
+test('an unrecognized YouTube response is not mislabeled as an empty/private playlist',async()=>{
+ const r=await playlistResponse('/?list=PLabcdefghij','GET',async()=>new Response('<script>var ytInitialData = {"contents":{"newUnknownRenderer":{}}};</script>'));
+ assert.equal(r.status,502);
+ const data=await r.json();assert.equal(data.error,'YOUTUBE_RESPONSE_UNRECOGNIZED');assert.ok(data.diagnostics.renderers.includes('newUnknownRenderer'));
+});
+test('a shell-only page can load the public playlist via its browse context',async()=>{
+ let calls=0;
+ const r=await playlistResponse('/?list=PLabcdefghij','GET',async(url,options)=>{
+  if(++calls===1)return new Response('<script>var ytInitialData = {};</script><script>ytcfg.set({"INNERTUBE_CONTEXT":{"client":{"clientName":"WEB","clientVersion":"test"}}});</script>');
+  assert.equal(JSON.parse(options.body).browseId,'VLPLabcdefghij');
+  return Response.json({contents:[{playlistVideoRenderer:{videoId:'nvJoqGZOPcQ',title:{simpleText:'new beginning'}}}]});
+ });
+ assert.equal(r.status,200);assert.equal((await r.json()).videos.length,1);assert.equal(calls,2);
+});
+test('explicit YouTube errors preserve their reason without retrying a restriction',async()=>{
+ let calls=0;
+ const r=await playlistResponse('/?list=PLabcdefghij','GET',async()=>{calls++;return new Response('<script>var ytInitialData = {"alerts":[{"alertRenderer":{"type":"ERROR","text":{"simpleText":"Playlist not available in this region"}}}]};</script>');});
+ assert.equal(r.status,422);const data=await r.json();assert.equal(data.error,'YOUTUBE_PLAYLIST_UNAVAILABLE');assert.equal(data.message,'Playlist not available in this region');assert.equal(calls,1);
+});

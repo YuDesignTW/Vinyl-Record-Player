@@ -8,7 +8,18 @@ export function YouTubePlayer({ videoLayer, background, onRequireInteraction, co
   useEffect(() => {
     if (!track || !videoLayer) return;
     let player,disposed = false,ready = false,wantsPlay = false,paused = true,level = live.current.volume,position = 0;
+    let selectedTrack = live.current.track, endedArmed = false;
     const adapter = {
+      get trackId() {return selectedTrack.id;},
+      selectTrack(next, autoplay = false) {
+        if (!next?.youtubeId || next.id === selectedTrack.id) return;
+        selectedTrack = next;position = 0;wantsPlay = autoplay;paused = !autoplay;endedArmed = false;
+        live.current.onTime(0);live.current.onDuration(0);
+        if (ready) {
+          if (autoplay) player.loadVideoById(next.youtubeId);
+          else player.cueVideoById(next.youtubeId);
+        }
+      },
       get paused() {return paused;},
       play() {wantsPlay = true;if (ready) player.playVideo();return Promise.resolve();},
       pause() {wantsPlay = false;paused = true;if (ready) player.pauseVideo();live.current.onPlaying(false);},
@@ -23,8 +34,8 @@ export function YouTubePlayer({ videoLayer, background, onRequireInteraction, co
     youtubeAPI().then((YT) => {
       if (disposed) return;
       player = new YT.Player(mount, { width: "100%", height: "200", videoId: live.current.track.youtubeId, playerVars: { playsinline: 1, origin: window.location.origin }, events: {
-          onReady: () => {if (disposed) return;ready = true;playerRef.current=player;mount.classList.add("is-ready");player.getIframe?.().classList.add("is-ready");player.setVolume(level * 100);if (position) player.seekTo(position, true);if (wantsPlay) player.loadVideoById(live.current.track.youtubeId);},
-          onStateChange: (e) => {if (disposed) return;paused = e.data !== 1;live.current.onPlaying(e.data === 1);live.current.onDuration(player.getDuration() || 0);if (e.data === 0) live.current.onEnded();},
+          onReady: () => {if (disposed) return;ready = true;playerRef.current=player;mount.classList.add("is-ready");player.getIframe?.().classList.add("is-ready");player.setVolume(level * 100);if (position) player.seekTo(position, true);if (wantsPlay) player.loadVideoById(selectedTrack.youtubeId);else player.cueVideoById(selectedTrack.youtubeId);},
+          onStateChange: (e) => {if (disposed) return;paused = e.data !== 1;live.current.onPlaying(e.data === 1);live.current.onDuration(player.getDuration() || 0);if (e.data === 1) endedArmed = true;if (e.data === 0 && endedArmed) {endedArmed = false;live.current.onEnded();}},
           onAutoplayBlocked: () => {live.current.onRequireInteraction?.();wantsPlay = false;live.current.onPlaying(false);live.current.onError("請點右側 YouTube 播放器開始播放。");},
           onError: (e) => {paused = true;wantsPlay = false;live.current.onPlaying(false);live.current.onError([101, 150].includes(e.data) ? "這部影片不允許嵌入播放，請更換 YouTube 連結。" : "YouTube 影片無法播放，可能已移除、受到限制或連線失敗。");}
         } });
@@ -37,7 +48,7 @@ export function YouTubePlayer({ videoLayer, background, onRequireInteraction, co
       if (!live.current.track && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) setTimeout(remove, 320);else remove();
     };
   }, [Boolean(track), videoLayer]);
-  useEffect(()=>{if(playerRef.current&&track)playerRef.current.cueVideoById(track.youtubeId);},[track?.id]);
+  useEffect(()=>{if(track) audioRef.current?.selectTrack?.(track);},[track?.id]);
   // Keep one portal target and iframe throughout mode changes. Only its CSS rectangle moves.
   useLayoutEffect(() => {
     if (!videoLayer || !track || background || collapsed) return;

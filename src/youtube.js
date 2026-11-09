@@ -37,6 +37,8 @@ export async function youtubePlaylist(list) {
  }
  const data = await response.json();
  if (!response.ok) {
+  if (data.error === 'YOUTUBE_PLAYLIST_UNAVAILABLE' && typeof data.message === 'string') throw new Error('YouTube 回覆：'+data.message);
+  if (data.error === 'YOUTUBE_RESPONSE_UNRECOGNIZED') throw new Error('YouTube 未回傳可辨識的清單內容，請稍後重試。');
   if (data.error === 'YOUTUBE_TIMEOUT') throw new Error('YouTube 讀取逾時，請稍後重試。');
   if (data.error === 'PLAYLIST_EMPTY_OR_UNAVAILABLE') throw new Error('播放清單沒有可讀取的影片，請確認公開狀態。');
   if (data.error === 'PLAYLIST_INCOMPLETE') throw new Error('播放清單未能完整讀取，請稍後重試。');

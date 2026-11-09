@@ -277,3 +277,35 @@ test('phone collection opens a dismissible drawer and logo collapses all navigat
   assert.ok(document.querySelector('#settings-panel').classList.contains('collapsed'));
  } finally {cleanup();window.matchMedia=originalMatch;}
 });
+
+test('YouTube advances immediately on ended, before a background page can render again',async()=>{
+ const originalFetch=globalThis.fetch;const originalRAF=globalThis.requestAnimationFrame;
+ const videos=[{youtubeId:'nvJoqGZOPcQ',title:'Background one'},{youtubeId:'Ns42XmBGAqw',title:'Background two'},{youtubeId:'joqWpWx5-ws',title:'Background three'}];
+ globalThis.fetch=async()=>Response.json({videos});
+ let player;
+ window.YT={Player:class {
+  constructor(node,options){player=this;this.events=options.events;this.loaded=options.videoId;this.iframe=document.createElement('iframe');node.replaceWith(this.iframe);queueMicrotask(()=>this.events.onReady());}
+  getIframe(){return this.iframe;} setVolume(){} getDuration(){return 100;}getCurrentTime(){return 100;}
+  loadVideoById(id){this.loaded=id;this.playVideo();}cueVideoById(id){this.loaded=id;this.events.onStateChange({data:5});}
+  playVideo(){this.events.onStateChange({data:1});}pauseVideo(){this.events.onStateChange({data:2});}seekTo(){}destroy(){this.iframe.remove();}
+ }};
+ try {
+  render(React.createElement(App));await enterStudio();
+  fireEvent.click(screen.getByRole('button',{name:'新唱片',exact:true}));
+  await waitFor(()=>assert.ok(screen.getByRole('button',{name:'標籤',exact:true})));
+  fireEvent.click(screen.getByRole('button',{name:'音樂',exact:true}));fireEvent.click(screen.getByRole('button',{name:'YouTube',exact:true}));
+  fireEvent.change(screen.getByLabelText('YouTube 連結'),{target:{value:'https://youtube.com/playlist?list=PLabcdefghij'}});
+  fireEvent.click(screen.getByRole('button',{name:'加入',exact:true}));
+  fireEvent.click(await screen.findByRole('button',{name:'加入 (3)',exact:true}));
+  fireEvent.click(await screen.findByRole('button',{name:'播放 Background one'}));
+  await waitFor(()=>assert.ok(player));
+  const {act}=await import('@testing-library/react');
+  globalThis.requestAnimationFrame=()=>99999;
+  await act(async()=>{
+   player.events.onStateChange({data:0});
+   assert.equal(player.loaded,videos[1].youtubeId,'next video starts inside ended callback, without React paint');
+   player.events.onStateChange({data:0});
+   assert.equal(player.loaded,videos[2].youtubeId,'another ended event uses actual transport track, not stale UI');
+  });
+ } finally {cleanup();globalThis.fetch=originalFetch;globalThis.requestAnimationFrame=originalRAF;delete window.YT;}
+});
