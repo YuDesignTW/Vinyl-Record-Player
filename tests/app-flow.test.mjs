@@ -10,7 +10,7 @@ globalThis.requestAnimationFrame=fn=>setTimeout(()=>fn(performance.now()),16);gl
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 window.HTMLCanvasElement.prototype.getContext=()=>null;
 window.Image=class {set src(value){queueMicrotask(()=>this.onload?.());} decode(){return Promise.resolve();}};
-window.matchMedia=()=>({matches:true,addEventListener(){},removeEventListener(){}});
+window.matchMedia=query=>({matches:query.includes("prefers-reduced-motion"),addEventListener(){},removeEventListener(){}});
 let playing=false;
 Object.defineProperty(HTMLMediaElement.prototype,'paused',{get(){return !playing;}});
 HTMLMediaElement.prototype.play=function(){playing=true;this.dispatchEvent(new Event('play'));return Promise.resolve();};
@@ -138,9 +138,11 @@ test('import, independently label both faces, archive and remount, then switch r
 
 test('YouTube shares transport and seeking, then releases the iframe when switching to local audio',async()=>{
  const originalError=console.error;console.error=(...args)=>{if(!String(args[0]).includes('THREE.WebGLRenderer'))originalError(...args);};
+ const originalFetch=globalThis.fetch;globalThis.fetch=async()=>new Response(JSON.stringify({title:'YouTube IFrame API Demo'}),{headers:{'Content-Type':'application/json'}});
  let fake,destroyed=false,pauseCalls=0;
  window.YT={Player:class {
   constructor(node,options){fake=this;this.events=options.events;this.time=0;this.iframe=document.createElement('iframe');node.replaceWith(this.iframe);queueMicrotask(()=>this.events.onReady());}
+  loadVideoById(){this.playVideo();} cueVideoById(){}
   getIframe(){return this.iframe;}
   setVolume(v){this.volume=v;} getDuration(){return 120;} getCurrentTime(){return this.time;}
   playVideo(){this.events.onStateChange({data:1});} pauseVideo(){pauseCalls++;this.events.onStateChange({data:2});}
@@ -155,7 +157,7 @@ test('YouTube shares transport and seeking, then releases the iframe when switch
   fireEvent.click(screen.getByRole('button',{name:'YouTube',exact:true}));
   fireEvent.change(screen.getByLabelText('YouTube 連結'),{target:{value:'https://youtu.be/M7lc1UVf-VE'}});
   fireEvent.click(screen.getByRole('button',{name:'加入',exact:true}));
-  fireEvent.click(screen.getByRole('button',{name:'播放 YouTube · M7lc1UVf-VE'}));
+  fireEvent.click(await screen.findByRole('button',{name:'播放 YouTube IFrame API Demo'}));
   await waitFor(()=>assert.ok(screen.getByRole('button',{name:'暫停',exact:true})));
   const originalPlayer=fake;
   fireEvent.click(screen.getByRole('button',{name:'聆聽',exact:true}));
@@ -196,7 +198,7 @@ test('YouTube shares transport and seeking, then releases the iframe when switch
   fireEvent.click(screen.getByRole('button',{name:'暫停',exact:true}));assert.ok(screen.getByRole('button',{name:'播放',exact:true}));
   fireEvent.click(screen.getByRole('button',{name:'播放 Evening'}));
   await waitFor(()=>assert.equal(destroyed,true));assert.equal(document.querySelector('main').classList.contains('video-background'),false);assert.equal(screen.queryByRole('button',{name:'關閉影片背景'}),null);assert.ok(document.querySelector('audio'));assert.equal(screen.queryByRole('region',{name:'YouTube 播放器'}),null);
- }finally{cleanup();delete window.YT;console.error=originalError;}
+ }finally{cleanup();delete window.YT;globalThis.fetch=originalFetch;console.error=originalError;}
 });
 
 test('deleting the active last record cancels pending autosave and stops playback',async()=>{
@@ -227,7 +229,7 @@ test('language defaults to English, updates all controls without losing edits, a
   await waitFor(()=>assert.equal(document.querySelector('main').getAttribute('aria-busy'),'false'));
   assert.equal(document.documentElement.lang,'en');
   assert.equal(screen.getByRole('button',{name:'Language',exact:true}).textContent,'EN');
-  assert.equal(screen.getByRole('button',{name:'Back to library'}).textContent,'hMusic');
+  assert.equal(screen.getByRole('button',{name:'Toggle navigation'}).textContent,'hMusic');
   fireEvent.click(screen.getByRole('button',{name:'Expand panel'}));
   fireEvent.change(screen.getByLabelText('Current record'),{target:{value:'我的專輯 / My album'}});
   selectLanguage('ja');
@@ -247,4 +249,26 @@ test('language defaults to English, updates all controls without losing edits, a
   assert.equal(screen.getByRole('button',{name:'言語',exact:true}).textContent,'JP');
   assert.equal(document.documentElement.lang,'ja');
  }finally{cleanup();window.localStorage.setItem('hmusic-language','zh-TW');console.error=originalError;}
+});
+
+test('phone collection opens a dismissible drawer and logo collapses all navigation',async()=>{
+ const originalMatch=window.matchMedia;
+ window.matchMedia=()=>({matches:true,addEventListener(){},removeEventListener(){}});
+ try {
+  render(React.createElement(App));await enterStudio();
+  assert.ok(document.querySelector('.mobile-library'));
+  assert.ok(document.querySelector('.desktop-library').hidden);
+  const logo=screen.getByRole('button',{name:'切換導覽'});
+  fireEvent.click(logo);
+  assert.ok(document.querySelector('.topbar').classList.contains('nav-collapsed'));
+  assert.ok(document.querySelector('.top-actions').hidden);
+  assert.ok(document.querySelector('nav').hidden);
+  fireEvent.click(logo);
+  assert.equal(document.querySelector('.top-actions').hidden,false);
+  const album=document.querySelector('.mobile-album');assert.ok(album);
+  fireEvent.click(album);
+  await waitFor(()=>assert.equal(document.querySelector('#settings-panel').classList.contains('collapsed'),false));
+  fireEvent.click(document.querySelector('.mobile-panel-close'));
+  assert.ok(document.querySelector('#settings-panel').classList.contains('collapsed'));
+ } finally {cleanup();window.matchMedia=originalMatch;}
 });

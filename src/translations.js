@@ -9,6 +9,7 @@ export const messages = {
 'YOUR OWN LITTLE RECORD STORE':['YOUR OWN LITTLE RECORD STORE','あなただけの小さなレコード店'],
 '唱片庫':['Library','ライブラリ'],'外觀':['Appearance','デザイン'],'音樂':['Music','音楽'],'聆聽':['Player','聴く'],
 '標籤':['Label','ラベル'],'封套':['Sleeve','ジャケット'],'唱片':['Vinyl','レコード'],
+'切換導覽':['Toggle navigation','ナビゲーションを切り替え'],
 '回到唱片庫':['Back to library','ライブラリに戻る'],'播放器設定':['Player settings','プレーヤー設定'],
 '關閉影片背景':['Turn off video background','動画背景をオフ'],'影片背景':['Video background','動画背景'],
 '切換淺色模式':['Switch to light mode','ライトモードに切り替え'],'切換深色模式':['Switch to dark mode','ダークモードに切り替え'],
