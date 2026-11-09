@@ -24,4 +24,54 @@ export function extractPlaylist(data) {
   visit(data);
   return { videos, continuation };
 }
-export function youtubePlugin(){return {name:'youtube-import',configureServer(server){server.middlewares.use('/api/youtube-playlist',async(req,res)=>{res.setHeader('Content-Type','application/json');try{const id=new URL(req.url,'http://localhost').searchParams.get('list');if(!/^[\w-]{10,150}$/.test(id||''))throw Error('Invalid playlist');const response=await fetch('https://www.youtube.com/playlist?list='+id,{signal:AbortSignal.timeout(20000)});const html=await response.text();const match=html.match(/var ytInitialData = (.*?);<\/script>/s);if(!match)throw Error('Playlist unavailable');let page=extractPlaylist(JSON.parse(match[1])),videos=[...page.videos];const config=html.match(/ytcfg.set\((\{.*?\})\);/s);const context=config?JSON.parse(config[1]).INNERTUBE_CONTEXT:null;let pages=0;while(page.continuation&&context&&pages++<50){const next=await fetch('https://www.youtube.com/youtubei/v1/browse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context,continuation:page.continuation}),signal:AbortSignal.timeout(20000)});page=extractPlaylist(await next.json());videos.push(...page.videos);}if(page.continuation)throw Error('Playlist too large or incomplete');videos=[...new Map(videos.map(v=>[v.youtubeId,v])).values()];if(!videos.length)throw Error('Playlist is private, empty or unavailable');res.end(JSON.stringify({videos}));}catch(e){res.statusCode=502;res.end(JSON.stringify({error:e.message}));}});}};}
+
+export async function playlistResponse(url, method = 'GET', fetcher = fetch) {
+  const json = (body, status = 200) => new Response(JSON.stringify(body), {
+    status, headers: {'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store'},
+  });
+  if (method !== 'GET') return json({error:'METHOD_NOT_ALLOWED'},405);
+  const id = new URL(url, 'http://localhost').searchParams.get('list');
+  if (!/^[\w-]{10,150}$/.test(id || '')) return json({error:'INVALID_PLAYLIST'},400);
+  const signal = AbortSignal.timeout(25000);
+  try {
+    const response = await fetcher('https://www.youtube.com/playlist?list='+encodeURIComponent(id), {signal});
+    if (!response.ok) return json({error:'YOUTUBE_UPSTREAM',upstreamStatus:response.status},502);
+    const html = await response.text();
+    const match = html.match(/var ytInitialData\s*=\s*(.*?);<\/script>/s);
+    if (!match) return json({error:'YOUTUBE_UNAVAILABLE'},502);
+    let page = extractPlaylist(JSON.parse(match[1]));
+    let videos = [...page.videos];
+    const config = html.match(/ytcfg.set\((\{.*?\})\);/s);
+    const context = config ? JSON.parse(config[1]).INNERTUBE_CONTEXT : null;
+    const tokens = new Set();
+    while (page.continuation && context && tokens.size < 50) {
+      if (tokens.has(page.continuation)) break;
+      tokens.add(page.continuation);
+      const next = await fetcher('https://www.youtube.com/youtubei/v1/browse', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({context,continuation:page.continuation}), signal,
+      });
+      if (!next.ok) return json({error:'YOUTUBE_UPSTREAM',upstreamStatus:next.status},502);
+      page = extractPlaylist(await next.json());
+      videos.push(...page.videos);
+    }
+    if (page.continuation) return json({error:'PLAYLIST_INCOMPLETE'},502);
+    videos = [...new Map(videos.map(video => [video.youtubeId,video])).values()];
+    if (!videos.length) return json({error:'PLAYLIST_EMPTY_OR_UNAVAILABLE'},422);
+    return json({videos});
+  } catch (error) {
+    return json({error:signal.aborted || error.name === 'TimeoutError' ? 'YOUTUBE_TIMEOUT' : 'YOUTUBE_UNAVAILABLE'},502);
+  }
+}
+
+// Shared Node adapter for Vite and Vercel's /api function.
+export async function youtubeNodeHandler(req, res) {
+  const response = await playlistResponse(req.url, req.method);
+  res.statusCode = response.status;
+  response.headers.forEach((value, key) => res.setHeader(key, value));
+  res.end(await response.text());
+}
+export function youtubePlugin() {
+  const install = server => server.middlewares.use('/api/youtube-playlist', youtubeNodeHandler);
+  return {name:'youtube-import', configureServer:install, configurePreviewServer:install};
+}

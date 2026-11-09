@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -15,7 +16,7 @@ for (const file of [index, worker, hosting]) {
 
 mkdirSync(path.join(dist, "server"), { recursive: true });
 mkdirSync(path.join(dist, ".openai"), { recursive: true });
-copyFileSync(worker, path.join(dist, "server", "index.js"));
+await build({ entryPoints: [worker], outfile: path.join(dist, "server", "index.js"), bundle: true, format: "esm", platform: "neutral", target: "es2022" });
 copyFileSync(hosting, path.join(dist, ".openai", "hosting.json"));
 
 console.log("Prepared Sites build: dist/server/index.js and dist/.openai/hosting.json");

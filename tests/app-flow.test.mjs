@@ -48,7 +48,12 @@ test('entrance waits for artwork decoding and requires an explicit click',async(
   await new Promise(resolve=>setTimeout(resolve,80));
   assert.ok(entrance(),'loading completion must not automatically enter');
   assert.equal(button.disabled,false);
-  fireEvent.click(button);
+  const repeated=document.querySelectorAll('.entrance-set')[1].querySelector('button');
+  repeated.focus();
+  assert.equal(document.activeElement,repeated);
+  assert.equal(repeated.closest('[aria-hidden="true"]'),null);
+  fireEvent.click(repeated);
+  assert.notEqual(document.activeElement,repeated);
   await waitFor(()=>assert.equal(entrance(),null));
  } finally {cleanup();window.Image=OriginalImage;}
 });

@@ -1,5 +1,10 @@
+import { playlistResponse } from '../server/youtube.mjs';
+
 export default {
   async fetch(request, env) {
+    if (new URL(request.url).pathname === "/api/youtube-playlist") {
+      return playlistResponse(request.url, request.method);
+    }
     const response = await env.ASSETS.fetch(request);
     const acceptsHtml = request.headers.get("accept")?.includes("text/html");
 

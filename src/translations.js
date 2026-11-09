@@ -1,5 +1,10 @@
 // UI text only. Record names, track titles and artwork entered by users stay unchanged.
 export const messages = {
+'此網站尚未提供 YouTube 匯入服務，請更新部署後重試。':['YouTube import is not available on this site. Update the deployment and try again.','このサイトでは YouTube インポートが利用できません。デプロイを更新してください。'],
+'YouTube 讀取逾時，請稍後重試。':['YouTube timed out. Please try again later.','YouTube の読み込みがタイムアウトしました。後でもう一度お試しください。'],
+'播放清單沒有可讀取的影片，請確認公開狀態。':['No readable videos in this playlist. Check its visibility.','読み込める動画がありません。公開設定を確認してください。'],
+'播放清單未能完整讀取，請稍後重試。':['Could not load the complete playlist. Please try again later.','再生リスト全体を読み込めませんでした。後でもう一度お試しください。'],
+'YouTube 暫時無法回應匯入服務，請稍後重試。':['YouTube could not respond to the import service. Please try again later.','YouTube がインポートサービスに応答できません。後でもう一度お試しください。'],
 '正在載入':['Loading','読み込み中'],
 'OhMusic 入口':['OhMusic entrance','OhMusic エントランス'],
 '進入唱片庫':['Enter library','ライブラリへ'],

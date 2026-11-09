@@ -7,7 +7,7 @@ import { RecordScene } from "./RecordScene";
 import { AudioPlayer } from "./AudioPlayer";
 import { TrackList } from "./TrackList";
 import { createRecord, archiveSnapshot, moveTrack, recordSides } from "./records";
-import { youtubeId, youtubePlaylistId, youtubeTitle } from "./youtube";
+import { youtubeId, youtubePlaylistId, youtubePlaylist, youtubeTitle } from "./youtube";
 import { listRecords, saveRecord, deleteRecord } from "./storage";
 import { localLibraryEnabled, canonicalLocalUrl } from "./localLibrary";
 const tabIcons = [Library, Palette, Music2, Headphones];
@@ -59,9 +59,9 @@ function Studio() {
   function addYoutube(videos, targetSide=side) {const added=videos.map(v=>({...v,id:crypto.randomUUID(),detail:"YouTube",side:targetSide}));edit(r=>({...r,tracks:[...r.tracks,...added]}));if(!currentId)setCurrentId(added[0].id);setYoutubeLink("");}
   async function importYoutube(e) {
     e.preventDefault();if(importBusy)return;const recordId=record.id,targetSide=side;setImportBusy(true);
-    try {const list=youtubePlaylistId(youtubeLink);if(list){const response=await fetch('/api/youtube-playlist?list='+encodeURIComponent(list));if(!response.ok)throw Error();const data=await response.json();if(latest.current.id!==recordId)return;setPlaylist({videos:data.videos,recordId,side:targetSide});setSelectedVideos(data.videos.map(v=>v.youtubeId));}
+    try {const list=youtubePlaylistId(youtubeLink);if(list){const videos=await youtubePlaylist(list);if(latest.current.id!==recordId)return;setPlaylist({videos,recordId,side:targetSide});setSelectedVideos(videos.map(v=>v.youtubeId));}
     else {const id=youtubeId(youtubeLink);if(!id)throw Error();const title=await youtubeTitle(id);if(latest.current.id===recordId)addYoutube([{youtubeId:id,title}],targetSide);}}
-    catch{setNotice("無法讀取 YouTube，請確認連結與公開狀態後重試。");}finally{setImportBusy(false);}
+    catch(error){setNotice(youtubePlaylistId(youtubeLink) && error.message ? error.message : "無法讀取 YouTube，請確認連結與公開狀態後重試。");}finally{setImportBusy(false);}
   }
   function removeTrack(t) {if (t.id === currentId) {intent.current = false;audio.current.pause();setCurrentId(sideTracks.find((x) => x.id !== t.id)?.id || "");}edit((r) => ({ ...r, tracks: r.tracks.filter((x) => x.id !== t.id) }));}
   async function archive() {

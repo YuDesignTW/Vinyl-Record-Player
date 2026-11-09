@@ -66,3 +66,13 @@ test("emits the files required by Sites packaging", async () => {
   await access(new URL("../dist/server/index.js", import.meta.url));
   await access(new URL("../dist/.openai/hosting.json", import.meta.url));
 });
+
+test('production playlist API is handled before static assets', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('<script>var ytInitialData = '+JSON.stringify({contents:[{playlistVideoRenderer:{videoId:'iRb67zfMF7M',title:{simpleText:'sakanaction / IRANAI -Music Video-'}}}]})+';</script>');
+  try {
+    const response = await worker.fetch(new Request('https://example.test/api/youtube-playlist?list=PLq_XQuPL5jQY82NqiXCARwU4VWc8x2paO'), {ASSETS:{fetch:async()=>new Response('missing',{status:404})}});
+    assert.equal(response.status,200);
+    assert.deepEqual((await response.json()).videos,[{youtubeId:'iRb67zfMF7M',title:'sakanaction / IRANAI -Music Video-'}]);
+  } finally {globalThis.fetch=originalFetch;}
+});
