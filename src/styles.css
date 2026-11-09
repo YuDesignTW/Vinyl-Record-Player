@@ -288,3 +288,15 @@
 .queue-heading-actions .queue-toggle svg,.queue-heading-actions .video-background-toggle svg{width:15px;height:15px;stroke-width:1.6}
 @media(min-width:701px) and (max-width:900px){.v2 .topbar nav{gap:2px}.v2 .topbar .nav-item{gap:2px}.v2 .topbar nav button{padding-inline:4px}.v2 .top-actions{gap:6px}}
 @media(max-width:700px){.v2 .topbar{display:flex;flex-wrap:wrap;height:88px;align-content:center;row-gap:7px;padding:10px 14px}.v2 .topbar .brand{font-size:20px}.v2 .topbar .top-actions{margin-left:auto;gap:7px}.v2 .topbar nav{position:static;transform:none;order:3;width:100%;justify-content:center;gap:3px}.v2 .topbar nav button{padding:3px 7px;font-size:11px}.v2 .topbar .language-toggle{font-size:10px;min-width:28px}.v2 .topbar .separator{font-size:9px}}
+.v2 .topbar nav[hidden]{display:none}
+.playlist-dialog{position:fixed;inset:0;z-index:2000;width:min(560px,calc(100vw - 32px));max-height:80dvh;margin:auto;padding:24px;border:1px solid #9995;border-radius:20px;background:var(--paper,#f1f1f3);color:var(--ink,#222);box-shadow:0 0 0 100vmax #0008;display:flex;flex-direction:column;gap:16px}
+.playlist-dialog h2{margin:0;font-size:20px}.playlist-actions{display:flex;gap:20px}.playlist-actions button{color:inherit;background:transparent;min-height:44px}.playlist-options{overflow:auto;overscroll-behavior:contain}.playlist-options label{display:flex;align-items:center;gap:12px;padding:12px 0;min-height:44px;border-bottom:1px solid #8883}.playlist-options input{width:20px;height:20px;flex-shrink:0}.playlist-options span{overflow-wrap:anywhere}
+@media(max-width:700px){
+.v2 .topbar{height:auto;min-height:64px;padding:10px 14px;position:relative;inset:auto;margin:10px;z-index:10}
+.v2 .topbar nav{justify-content:space-between}.v2 .topbar nav button{min-height:44px;font-size:13px}.v2 .topbar .separator{display:none}
+.v2 .control-panel{position:relative;inset:auto;width:calc(100% - 24px);max-height:none;margin:12px;border-radius:20px}
+.v2 .control-panel .panel-body{max-height:none}.v2 .panel-content{padding:16px}.v2 .scene-region{height:32dvh;min-height:220px}
+.v2 .text-input{font-size:16px;min-height:44px}.v2 .side-selector button,.v2 .outline,.v2 .listening-track{min-height:44px}
+.v2 .youtube-import>div{flex-wrap:wrap}.v2 .youtube-import input{min-width:0;width:100%}.v2 .youtube-import button{width:100%}
+.v2 .stage-footer,.v2 .browsing-hint{display:none}.v2 .player-controls{padding-bottom:max(16px,env(safe-area-inset-bottom))}
+}

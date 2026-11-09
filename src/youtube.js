@@ -26,3 +26,6 @@ export function youtubeAPI(){
  });
  return apiPromise;
 }
+
+export function youtubePlaylistId(input){try{const u=new URL(input);return ['youtube.com','www.youtube.com','music.youtube.com','m.youtube.com'].includes(u.hostname)&&/^[\w-]{10,150}$/.test(u.searchParams.get('list')||'')?u.searchParams.get('list'):null;}catch{return null;}}
+export async function youtubeTitle(id){const r=await fetch('https://www.youtube.com/oembed?format=json&url='+encodeURIComponent('https://www.youtube.com/watch?v='+id),{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Unable to read video title');return (await r.json()).title;}

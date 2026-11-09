@@ -1,3 +1,4 @@
+import {youtubePlugin} from "./server/youtube.mjs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import {fileURLToPath} from "node:url";
@@ -19,5 +20,5 @@ export default defineConfig({
       clientFiles: ["./src/main.jsx"],
     },
   },
-  plugins: [react(), localLibraryPlugin(fileURLToPath(new URL("./.local-data/records", import.meta.url)))],
+  plugins: [youtubePlugin(), react(), localLibraryPlugin(fileURLToPath(new URL("./.local-data/records", import.meta.url)))],
 });

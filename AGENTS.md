@@ -104,3 +104,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Entrance text and accessible labels follow existing EN/JA/zh-TW preference through useTranslation. Disclaimer link passes language explicitly; standalone disclaimer localizes all content/title/document language using query preference, then saved preference, then English. Fictional album titles remain unchanged.
 
 - Entrance update (2026-11-06): supersedes auto-entry. Wait for both library data and entrance cover/vinyl image loading and decoding, then fade in the wall. Enter the studio only on explicit sleeve activation. Failed artwork uses a neutral fallback, with a bounded loading timeout; respect reduced motion.
+- 2026-11-09: Logo toggles navigation. YouTube imports use actual video titles and playlist imports present a selectable list before adding. Keep desktop composition unchanged; simplify mobile controls with a stacked layout and touch-sized inputs.
